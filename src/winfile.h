@@ -15,7 +15,7 @@
 #define NTFS
 
 #include <windows.h>
-#include <windowsX.h>
+#include <windowsx.h>
 #include <setjmp.h>
 #include <string.h>
 #include <memory.h>
@@ -26,6 +26,7 @@
 #include <commctrl.h>
 #include "fmifs.h"
 #include <shellapi.h>
+#include <dbt.h>
 #include <shlwapi.h>
 #include <strsafe.h>
 #include "suggest.h"
@@ -832,6 +833,7 @@ BOOL  RectTreeItem(HWND hwndLB, INT iItem, BOOL bFocusOn);
 #define FS_COPYDONE                (WM_USER+0x116)
 #define FS_DIRREADDONE             (WM_USER+0x117)
 #define FS_REBUILDDOCSTRING        (WM_USER+0x118)
+#define FS_REFRESHREMOVABLE        (WM_USER+0x11A)
 
 #define FS_TESTEMPTY               (WM_USER+0x119)
 

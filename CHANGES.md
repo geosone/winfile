@@ -1,3 +1,11 @@
+## Changes in the `calmira-hotplug` branch
+
+1. Refresh the drive list and active view when Windows reports removable
+   volume arrival or removal through `WM_DEVICECHANGE`.
+2. Coalesce duplicate device notifications through the existing command path,
+   so drive buttons, extensions, free-space data, and directory views update
+   together.
+
 ## Changes in v10.4 compared to v10.3 (February 2025)
 
 1. New Korean translation
