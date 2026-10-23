@@ -11,8 +11,13 @@
 
 #include <stdlib.h>
 
+#ifdef CALMIRA_WIN16
+#include "../win16/platform.h"
+#define LFNCANON_MASK 1
+#else
 #include "winfile.h"
 #include "lfn.h"
+#endif
 
 
 #define FIL_STANDARD      1

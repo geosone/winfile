@@ -9,7 +9,12 @@
 
 ********************************************************************/
 
+#ifdef CALMIRA_WIN16
+#include "../win16/platform.h"
+#include "res.h"
+#else
 #include "winfile.h"
+#endif
 
 static DWORD pdwOrders[] =
 {

@@ -14,7 +14,18 @@
 #include "heap.h"
 #endif
 
+#ifdef CALMIRA_WIN16
+#include "../win16/platform.h"
+#define WF_ALLOC(size) W16Alloc(size)
+#define WF_FREE(pointer) W16Free(pointer)
+#define WF_SIZE(pointer) W16Size(pointer)
+typedef UINT SIZE_T;
+#else
 #include <windows.h>
+#define WF_ALLOC(size) LocalAlloc(LMEM_FIXED, size)
+#define WF_FREE(pointer) LocalFree(pointer)
+#define WF_SIZE(pointer) LocalSize((HLOCAL)(pointer))
+#endif
 #include "wfdocb.h"
 #include "wfmem.h"
 
@@ -24,7 +35,7 @@ MemNew()
    LPXDTALINK lpStart;
    LPXDTAHEAD lpHead;
 
-   lpStart = (LPXDTALINK) LocalAlloc(LMEM_FIXED, BLOCK_SIZE_GRANULARITY);
+   lpStart = (LPXDTALINK) WF_ALLOC(BLOCK_SIZE_GRANULARITY);
 
    if (!lpStart)
       return NULL;
@@ -88,12 +99,12 @@ MemDelete(
    plpxdta = lpHead->alpxdtaSorted;
 
    if (plpxdta)
-      LocalFree(plpxdta);
+      WF_FREE(plpxdta);
 
    while (lpStart) {
 
       lpLink = lpStart->next;
-      LocalFree(lpStart);
+      WF_FREE(lpStart);
 
       lpStart = lpLink;
    }
@@ -146,9 +157,19 @@ MemAdd(
    DWORD dwNewSize;
 #endif
 
-   cbSpace = ALIGNBLOCK((cchFileName+
-                         cchAlternateFileName+2)*sizeof(WCHAR)+
+   /* Calculate before narrowing to 16 bits; oversized names must not wrap
+      the allocation or overrun the original fixed-size linked blocks. */
+   {
+      DWORD bytes = ALIGNBLOCK(((DWORD)cchFileName+
+                         cchAlternateFileName+2)*sizeof(TCHAR)+
                          sizeof(XDTA));
+#ifndef MEMDOUBLE
+      if (bytes > BLOCK_SIZE_GRANULARITY - ALIGNBLOCK(sizeof(XDTALINK)))
+         return NULL;
+#endif
+      if (bytes > 65535UL) return NULL;
+      cbSpace = (UINT)bytes;
+   }
 
 #ifdef MEMDOUBLE
    if (cbSpace + lpLast->dwNextFree > lpLast->dwSize) {
@@ -161,7 +182,7 @@ MemAdd(
       if (dwNewSize < lpLast->dwSize)
          dwNewSize = lpLast->dwSize;
 
-      lpLast->next = LocalAlloc(LMEM_FIXED, dwNewSize);
+      lpLast->next = WF_ALLOC(dwNewSize);
 
       if (!lpLast->next)
          return NULL;
@@ -175,7 +196,7 @@ MemAdd(
       //
       // Must allocate a new block
       //
-      lpLast->next = LocalAlloc(LMEM_FIXED, BLOCK_SIZE_GRANULARITY);
+      lpLast->next = WF_ALLOC(BLOCK_SIZE_GRANULARITY);
 
       if (!lpLast->next)
          return NULL;
@@ -192,7 +213,7 @@ MemAdd(
    // Update everything
    //
 
-   lpxdta = (LPXDTA)((PBYTE)lpLast+lpLast->dwNextFree);
+   lpxdta = (LPXDTA)((LPBYTE)lpLast+lpLast->dwNextFree);
 
    lpLast->dwNextFree += cbSpace;
    lpxdta->dwSize = cbSpace;
@@ -241,16 +262,16 @@ MemClone(LPXDTALINK lpStart)
    {
       lpNext = lpStart->next;
 
-      dwSize = LocalSize((HLOCAL)lpStart);
+      dwSize = WF_SIZE(lpStart);
 
-      lpLink = LocalAlloc(LMEM_FIXED, dwSize);
+      lpLink = WF_ALLOC(dwSize);
       if (!lpLink)
       {
          MemDelete(lpStartCopy);
          return NULL;
       }
 
-      CopyMemory((PBYTE)lpLink, (PBYTE)lpStart, dwSize);
+      CopyMemory((LPBYTE)lpLink, (LPBYTE)lpStart, dwSize);
 
       if (!lpStartCopy)
       {
@@ -290,14 +311,14 @@ MemNext(LPXDTALINK* plpLink, LPXDTA lpxdta)
 {
    LPXDTALINK lpLinkCur = *plpLink;
 
-   if ((PBYTE)lpxdta + lpxdta->dwSize - (PBYTE)lpLinkCur == (INT)lpLinkCur->dwNextFree)
+   if ((LPBYTE)lpxdta + lpxdta->dwSize - (LPBYTE)lpLinkCur == (INT)lpLinkCur->dwNextFree)
    {
       *plpLink = lpLinkCur->next;
-      return (LPXDTA)(((PBYTE)*plpLink)+sizeof(XDTALINK));
+      return *plpLink ? (LPXDTA)(((LPBYTE)*plpLink)+sizeof(XDTALINK)) : NULL;
    }
    else
    {
-      return (LPXDTA)((PBYTE)lpxdta + lpxdta->dwSize);
+      return (LPXDTA)((LPBYTE)lpxdta + lpxdta->dwSize);
    }
 }
 

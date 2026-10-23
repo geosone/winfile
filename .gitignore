@@ -18,6 +18,7 @@ x64/
 x86/
 [Ww]in32/
 bld/
+*.err
 
 # Visual Studio 2015 cache/options directory
 .vs/

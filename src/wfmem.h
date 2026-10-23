@@ -56,7 +56,7 @@ typedef struct _XDTA {
 
    PDOCBUCKET pDocB;
 
-   WCHAR cFileNames[1];
+   TCHAR cFileNames[1];
 } XDTA;
 
 #define LINKHEADSIZE (sizeof(XDTALINK) + sizeof(XDTAHEAD))
@@ -68,12 +68,12 @@ LPXDTALINK MemClone(LPXDTALINK lpStart);
 LPXDTA MemAdd(LPXDTALINK* plpLast, UINT cchFileName, UINT cchAlternateFileName);
 LPXDTA MemNext(LPXDTALINK* plpLink, LPXDTA lpxdta);
 
-#define MemFirst(lpStart) ((LPXDTA)(((PBYTE)lpStart) + LINKHEADSIZE))
+#define MemFirst(lpStart) ((LPXDTA)(((LPBYTE)lpStart) + LINKHEADSIZE))
 #define MemGetAlternateFileName(lpxdta) (&lpxdta->cFileNames[lpxdta->cchFileNameOffset])
 #define MemGetFileName(lpxdta)          (lpxdta->cFileNames)
-#define MemLinkToHead(link) ((LPXDTAHEAD)((PBYTE)link+sizeof(XDTALINK)))
+#define MemLinkToHead(link) ((LPXDTAHEAD)((LPBYTE)link+sizeof(XDTALINK)))
 
-#define pdtaNext(pdta) ((LPXDTA)((PBYTE)(pdta) + ((LPXDTA)pdta)->dwSize))
+#define pdtaNext(pdta) ((LPXDTA)((LPBYTE)(pdta) + ((LPXDTA)pdta)->dwSize))
 
 
 #endif // ndef _WFMEM_H

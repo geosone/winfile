@@ -1,0 +1,10 @@
+#include <windows.h>
+#include "../src/res.h"
+STRINGTABLE
+BEGIN
+    IDS_ORDERB "%s bytes"
+    IDS_ORDERKB "%s KB"
+    IDS_ORDERMB "%s MB"
+    IDS_ORDERGB "%s GB"
+    IDS_ORDERTB "%s TB"
+END
